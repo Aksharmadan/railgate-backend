@@ -38,6 +38,8 @@ app.get("/ui", (req, res) => res.send(renderUI()));
 app.get("/api/gates", (req, res) => res.json(gates));
 
 const PORT = process.env.PORT || 3000;
+app.get("/", (req, res) => res.redirect("/ui"));
+
 app.listen(PORT, () => console.log("Server running"));
 
 /* VERSION CHECK */
