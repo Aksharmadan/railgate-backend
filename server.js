@@ -39,3 +39,8 @@ app.get("/api/gates", (req, res) => res.json(gates));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("Server running"));
+
+/* VERSION CHECK */
+app.get("/__version", (req, res) => {
+  res.send("RailGate version 1.0.1");
+});
