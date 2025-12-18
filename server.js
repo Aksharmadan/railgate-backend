@@ -1,55 +1,66 @@
-require("dotenv").config();
 const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const Gate = require("./models/Gate");
-
 const app = express();
-app.use(cors());
+
 app.use(express.json());
 
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch(err => console.error(err));
+const gates = [
+  {
+    name: "Chromepet Railway Gate",
+    area: "Chromepet",
+    wait: 10,
+    status: "unknown"
+  },
+  {
+    name: "Tambaram East Railway Gate",
+    area: "Tambaram",
+    wait: 0,
+    status: "likely open"
+  },
+  {
+    name: "Pallavaram Railway Gate",
+    area: "Pallavaram",
+    wait: 8,
+    status: "unknown"
+  }
+];
 
-function isPeak(peakHours) {
-  const now = new Date();
-  const t = now.getHours() * 60 + now.getMinutes();
-  return peakHours.some(p => {
-    const [s,e] = p.split("-");
-    const [sh,sm] = s.split(":");
-    const [eh,em] = e.split(":");
-    return t >= (+sh*60+ +sm) && t <= (+eh*60+ +em);
-  });
-}
-
-function wait(g) {
-  if (g.status === "open") return 0;
-  if (g.status === "heavy") return g.avgWaitMin + 5;
-  if (g.status === "closed") return g.avgWaitMin;
-  if (isPeak(g.peakHours)) return g.avgWaitMin;
-  return null;
-}
-
-app.get("/gates", async (_, res) => {
-  const gates = await Gate.find();
-  res.json(gates.map(g => ({
-    ...g.toObject(),
-    estimatedWaitMin: wait(g),
-    peakNow: isPeak(g.peakHours)
-  })));
+/* API */
+app.get("/api/gates", (req, res) => {
+  res.json(gates);
 });
 
-app.post("/gates/:id/status", async (req, res) => {
-  const gate = await Gate.findById(req.params.id);
-  if (!gate) return res.status(404).json({ error: "Gate not found" });
+/* ROOT → UI */
+app.get("/", (req, res) => {
+  res.redirect("/ui");
+});
 
-  gate.status = req.body.status;
-  gate.lastUpdated = new Date();
-  await gate.save();
-
-  res.json({ gate, estimatedWaitMin: wait(gate) });
+/* UI */
+app.get("/ui", (req, res) => {
+  res.send(`
+    <html>
+    <head>
+      <title>RailGate</title>
+      <style>
+        body { font-family: Arial; background:#f5f5f5; padding:20px; }
+        .card { background:#fff; padding:15px; margin-bottom:15px; border-radius:10px; }
+      </style>
+    </head>
+    <body>
+      <h1>🚦 RailGate – Chennai</h1>
+      ${gates.map(g => `
+        <div class="card">
+          <h3>${g.name}</h3>
+          <p>Area: ${g.area}</p>
+          <p>Status: ${g.status}</p>
+          <p>Wait: ${g.wait} min</p>
+        </div>
+      `).join("")}
+    </body>
+    </html>
+  `);
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Server running"));
+app.listen(PORT, () => {
+  console.log("Server running on port", PORT);
+});
