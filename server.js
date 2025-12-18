@@ -4,40 +4,14 @@ const app = express();
 app.use(express.json());
 
 const gates = [
-  {
-    name: "Chromepet Railway Gate",
-    area: "Chromepet",
-    wait: 10,
-    status: "unknown"
-  },
-  {
-    name: "Tambaram East Railway Gate",
-    area: "Tambaram",
-    wait: 0,
-    status: "likely open"
-  },
-  {
-    name: "Pallavaram Railway Gate",
-    area: "Pallavaram",
-    wait: 8,
-    status: "unknown"
-  }
+  { name: "Chromepet Railway Gate", area: "Chromepet", wait: 10, status: "unknown" },
+  { name: "Tambaram East Railway Gate", area: "Tambaram", wait: 0, status: "likely open" },
+  { name: "Pallavaram Railway Gate", area: "Pallavaram", wait: 8, status: "unknown" }
 ];
 
-/* API */
-app.get("/api/gates", (req, res) => {
-  res.json(gates);
-});
-
-/* ROOT → UI */
-app.get("/", (req, res) => {
-  res.redirect("/ui");
-});
-
-/* UI */
-app.get("/ui", (req, res) => {
-  res.send(`
-    <html>
+function renderUI() {
+  return `
+  <html>
     <head>
       <title>RailGate</title>
       <style>
@@ -56,11 +30,12 @@ app.get("/ui", (req, res) => {
         </div>
       `).join("")}
     </body>
-    </html>
-  `);
-});
+  </html>`;
+}
+
+app.get("/", (req, res) => res.send(renderUI()));
+app.get("/ui", (req, res) => res.send(renderUI()));
+app.get("/api/gates", (req, res) => res.json(gates));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log("Server running on port", PORT);
-});
+app.listen(PORT, () => console.log("Server running"));
